@@ -123,10 +123,10 @@ static int8_t get_encoder_value(int enc)
 	uint16_t current_val = timer_get_counter(enc_rot[enc].tim);
 	int16_t raw_delta = (int16_t)(current_val - enc_rot[enc].last_value);
 
-	int16_t clicks = raw_delta / 4;
+	int16_t clicks = raw_delta / 2;
 	int8_t dir = (clicks > 0)? 1 : ((clicks < 0)? -1: 0);
 
-	if(dir != 0) enc_rot[enc].last_value += (clicks * 4);
+	if(dir != 0) enc_rot[enc].last_value += (clicks * 2);
 
 	return dir;
 }

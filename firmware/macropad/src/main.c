@@ -49,6 +49,7 @@ int main(void)
 
 	while(1)
 	{
+		process_sequence_tick();
 		input_poll();
 		display_update_chunk();
 		usb_run();

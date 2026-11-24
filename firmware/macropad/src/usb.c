@@ -94,7 +94,7 @@ static const uint8_t cntrl_report_descr[] = {
 	0x09, 0x01,        // Usage (Consumer control)
 	0xA1, 0x01,        // Collection (Application)
 
-	0x75, 0x08,        //   Report Size (1)
+	0x75, 0x08,        //   Report Size (8)
 	0x95, 0x01,        //   Report Count (1)
 	0x05, 0x0C,        //   Usage Page (Consumer)
 	0x19, 0x00,        //   Usage Minimum (0)

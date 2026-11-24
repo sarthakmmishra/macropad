@@ -4,8 +4,8 @@
 #include <string.h>
 
 #include "defs.h"
-#include "json_parser.h"
 #include "gui.h"
+#include "json_parser.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define NULL_DEVICE "NUL"
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         }
         else if (strcmp(argv[i], "--gui") == 0 || strcmp(argv[i], "-g") == 0)
         {
-            gui=true;
+            gui = true;
         }
         else
         {
@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
     }
 
     printf("Loading layout config from: %s\n", input_filename);
-    if(gui) call_gui(input_filename);
+    if (gui)
+        call_gui(input_filename);
 
     mappings_t *map = NULL;
     size_t total_bin_size = 0;

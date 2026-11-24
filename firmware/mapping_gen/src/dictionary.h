@@ -20,5 +20,6 @@ extern const key_lookup_t mod_dict[];
 extern const size_t mod_dict_size;
 
 char *trim_whitespace(char *str);
+bool token_starts_with_ci(const char *token, const char *prefix);
 bool lookup_consumer_value(const char *token, uint16_t *out_val);
 bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SIZE]);

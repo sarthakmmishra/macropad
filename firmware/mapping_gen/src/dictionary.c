@@ -118,6 +118,30 @@ const key_lookup_t mod_dict[] = {{"NONE", KEY_MOD_NONE},     {"LCTRL", KEY_MOD_L
                                  {"RSHIFT", KEY_MOD_RSHIFT}, {"RALT", KEY_MOD_RALT},    {"RGUI", KEY_MOD_RGUI}};
 const size_t mod_dict_size = sizeof(mod_dict) / sizeof(mod_dict[0]);
 
+static bool token_equals_ci(const char *a, const char *b)
+{
+    while (*a != '\0' && *b != '\0')
+    {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
+            return false;
+        a++;
+        b++;
+    }
+    return *a == '\0' && *b == '\0';
+}
+
+bool token_starts_with_ci(const char *token, const char *prefix)
+{
+    while (*prefix != '\0')
+    {
+        if (*token == '\0' || tolower((unsigned char)*token) != tolower((unsigned char)*prefix))
+            return false;
+        token++;
+        prefix++;
+    }
+    return true;
+}
+
 char *trim_whitespace(char *str)
 {
     char *end;
@@ -136,7 +160,7 @@ bool lookup_consumer_value(const char *token, uint16_t *out_val)
 {
     for (size_t i = 0; i < consumer_key_dict_size; i++)
     {
-        if (strcmp(token, consumer_key_dict[i].token) == 0)
+        if (token_equals_ci(token, consumer_key_dict[i].token))
         {
             *out_val = consumer_key_dict[i].val;
             return true;
@@ -156,13 +180,26 @@ bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SI
     strncpy(token_buf, token, sizeof(token_buf) - 1);
     token_buf[sizeof(token_buf) - 1] = '\0';
 
+    char *trimmed_token = trim_whitespace(token_buf);
+    size_t trimmed_len = strlen(trimmed_token);
+
+    if (trimmed_len == 0)
+    {
+        fprintf(stderr, "Syntax Error: Empty key token in '%s'\n", token);
+        return false;
+    }
+
+    bool auto_shift = trimmed_len == 1 && isupper((unsigned char)trimmed_token[0]);
+    if (auto_shift)
+        payload[0] |= KEY_MOD_LSHIFT;
+
     bool holds_modifier = false;
     bool holds_consumer = false;
     bool holds_standard = false;
 
     int num_consumer = 0;
 
-    char *sub_token = strtok(token_buf, "+");
+    char *sub_token = strtok(trimmed_token, "+");
     while (sub_token != NULL)
     {
         char *clean_sub = trim_whitespace(sub_token);
@@ -170,7 +207,7 @@ bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SI
 
         for (size_t i = 0; i < mod_dict_size; i++)
         {
-            if (strcmp(clean_sub, mod_dict[i].token) == 0)
+            if (token_equals_ci(clean_sub, mod_dict[i].token))
             {
                 if (holds_consumer)
                 {
@@ -191,7 +228,7 @@ bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SI
 
         for (size_t i = 0; i < consumer_key_dict_size; i++)
         {
-            if (strcmp(clean_sub, consumer_key_dict[i].token) == 0)
+            if (token_equals_ci(clean_sub, consumer_key_dict[i].token))
             {
                 if (holds_modifier)
                 {
@@ -224,7 +261,7 @@ bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SI
 
         for (size_t i = 0; i < standard_key_dict_size; i++)
         {
-            if (strcmp(clean_sub, standard_key_dict[i].token) == 0)
+            if (token_equals_ci(clean_sub, standard_key_dict[i].token))
             {
                 if (holds_consumer)
                 {
@@ -235,8 +272,14 @@ bool parse_shortcut(const char *token, uint8_t *type, uint8_t payload[PAYLOAD_SI
                 uint8_t byte_idx = ((keycode >> 8) & 0xFF) + 1;
                 uint8_t val = keycode & 0xFF;
                 payload[byte_idx] |= val;
+                identified = true;
                 break;
             }
+        }
+        if (!identified)
+        {
+            fprintf(stderr, "Syntax Error: Unknown key token '%s'\n", clean_sub);
+            return false;
         }
         sub_token = strtok(NULL, "+");
     }
